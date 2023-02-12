@@ -261,7 +261,7 @@ def feedTemplate():
 
 @app.route('/c7f8f77fe951231edc4ac876a17f3b9d.txt')
 def wechatBypass():
-    return send_file(os.path.join(os.getcwd(), 'static', 'c7f8f77fe951231edc4ac876a17f3b9d.txt'), download_name='c7f8f77fe951231edc4ac876a17f3b9d.txt')
+    return send_file(os.path.join(os.getcwd(), 'c7f8f77fe951231edc4ac876a17f3b9d.txt'), download_name='c7f8f77fe951231edc4ac876a17f3b9d.txt')
 
 @app.route('/', methods=['GET', 'POST'])
 def file_upload():
