@@ -28,6 +28,20 @@ body {
   opacity: 0.4;
 }
 
+a {
+  color: inherit;
+  text-decoration: inherit;
+  transition: transform .2s;
+}
+
+a:hover {
+  color: inherit;
+  transform: scale(1.5);
+  -webkit-transform: scale(1.5);
+  font-size: larger;
+  text-decoration: inherit;
+}
+
 .content {
   position: fixed;
   bottom: 0;
