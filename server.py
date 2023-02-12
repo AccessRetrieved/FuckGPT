@@ -292,4 +292,4 @@ if __name__ == '__main__':
     sock.bind(('localhost', 0))
     port = sock.getsockname()[1]
     sock.close()
-    app.run(debug=False, port=2350)
+    app.run(debug=True, port=2350)
