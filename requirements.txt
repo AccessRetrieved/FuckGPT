@@ -8,3 +8,4 @@ pyfiglet
 pypdf2
 fpdf
 textwrap3
+gunicorn
