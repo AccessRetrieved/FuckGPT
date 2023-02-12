@@ -243,7 +243,7 @@ def generateReport(path):
 
 @app.route('/')
 def feedTemplate():
-    return render_template('/index.html')
+    return render_template('/templetes/index.html')
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -292,4 +292,4 @@ if __name__ == '__main__':
     sock.bind(('localhost', 0))
     port = sock.getsockname()[1]
     sock.close()
-    app.run(debug=False)
+    app.run(debug=False, port=2350)
