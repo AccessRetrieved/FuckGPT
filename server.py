@@ -251,7 +251,13 @@ def generateReport(path):
 
 @app.route('/')
 def feedTemplate():
-    return render_template('/index.html')
+    user_agent = request.headers.get('User-Agent')
+    user_agent = user_agent.lower()
+
+    if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
+        return render_template('/phone.html')
+    else:
+        return render_template('/index.html')
 
 
 @app.route('/', methods=['GET', 'POST'])
