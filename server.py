@@ -78,10 +78,8 @@ def loadFile(path_to_file):
         for i in reader.pages:
             tempText = tempText + i.extract_text()
 
-        print(tempText)
         return tempText
     elif pathSuffix == '.docx':
-        print(getText(path_to_file))
         return getText(path_to_file)
 
 
