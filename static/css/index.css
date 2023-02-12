@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Comfortaa:wght@300&display=swap');
+
+header h1 {
+  font-family: 'Bebas Neue', cursive;
+  letter-spacing: 15px;
+  font-size: 200px;
+  font-weight: 600;
+  background-image: linear-gradient(45deg, #553c9a, #ee4b2b);
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-align: center;
+  z-index: 3;
+  padding-right: 100px;
+  text-shadow: 5px 10px white;
+}
+
+body {
+  background: black;
+}
+
+.bgVideo {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  min-width: 100%;
+  min-height: 100%;
+  opacity: 0.4;
+}
+
+.content {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 80px;
+}
+
+.page-content {
+  text-align: center;
+}
+
+.footer {
+  position: fixed;
+   left: 0;
+   bottom: 0;
+   width: 100%;
+   color: white;
+   text-align: center;
+   font-family: 'Comfortaa';
+}
+
+input[type=file] {
+  width: 500px;
+  max-width: 100%;
+  color: #fff;
+  padding: 5px;
+  background: linear-gradient(to right, #ce24ad, #832cdd);
+  border-radius: 10px;
+  box-shadow: 3px 5px white;
+  font-family: 'Comfortaa';
+  padding-left: 10px;
+}
+
+input[type=file]::file-selector-button {
+  margin-right: 20px;
+  border: none;
+  background: #084cdf;
+  padding: 10px 20px;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: background .2s ease-in-out;
+}
+
+input[type=file]::file-selector-button:hover {
+  background: #0d45a5;
+}

@@ -226,7 +226,7 @@ def generateReport(path):
 # web pages
 @app.route('/')
 def feedTemplate():
-    return render_template('/templates/index.html')
+    return render_template('/index.html')
 
 @app.route('/', methods=['GET', 'POST'])
 def file_upload():
