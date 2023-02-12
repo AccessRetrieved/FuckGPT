@@ -18,10 +18,11 @@ import textwrap
 from fpdf import FPDF
 from datetime import date, datetime
 import socket
+import docx
 
 # init
 app = Flask(__name__)
-allowedExtensions = {'txt', 'pdf'}
+allowedExtensions = {'txt', 'pdf', 'docx'}
 
 
 class bcolors:
@@ -36,11 +37,15 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 # functions
-
+def getText(filename):
+    doc = docx.Document(filename)
+    fullText = []
+    for para in doc.paragraphs:
+        fullText.append(para.text)
+    return '\n'.join(fullText)
 
 def allowed_file(fileExt):
     return '.' in fileExt and fileExt.rsplit('.', 1)[1].lower() in allowedExtensions
-
 
 def pretty_print_POST(req):
     """
@@ -75,6 +80,9 @@ def loadFile(path_to_file):
 
         print(tempText)
         return tempText
+    elif pathSuffix == '.docx':
+        print(getText(path_to_file))
+        return getText(path_to_file)
 
 
 def writeToHtml(html):
@@ -255,7 +263,7 @@ def file_upload():
             if uploaded_file.filename != '':
                 filename = secure_filename(uploaded_file.filename)
                 fileExtension = pathlib.Path(filename).suffix
-                if fileExtension == '.txt' or fileExtension == '.pdf':
+                if fileExtension == '.txt' or fileExtension == '.pdf' or fileExtension == '.docx':
                     os.makedirs(os.path.join(
                         os.getcwd(), 'saved'), exist_ok=True)
                     uploaded_file.save(os.path.join(
@@ -278,11 +286,11 @@ def file_upload():
 
                     return send_file(os.path.join(os.getcwd(), 'saved', 'report.pdf'))
         else:
-            return '''<html><body onload="alert('Invalid file extension. Only supports .txt, .pdf'); window.location.href='http://127.0.0.1:5000/';"></body></html>'''
+            return '''<html><body onload="alert('Invalid file extension. Only supports .txt, .pdf'); window.location.href='/';"></body></html>'''
     except Exception as e:
         return send_file(os.path.join(os.getcwd(), 'saved', 'report.pdf'))
         print(e)
-        return '''<html><body onload="alert('Error generating report. Please try again.'); window.location.href='http://127.0.0.1:5000/';"></body></html>'''
+        return '''<html><body onload="alert('Error generating report. Please try again.'); window.location.href='/';"></body></html>'''
 
     return redirect(url_for('feedTemplate'))
 

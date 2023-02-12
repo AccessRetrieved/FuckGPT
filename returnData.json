@@ -1,0 +1,183 @@
+{
+  "documents": [
+    {
+      "average_generated_prob": 0,
+      "completely_generated_prob": 6.038008516497037e-16,
+      "overall_burstiness": 662.991943359375,
+      "paragraphs": [
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 0
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 1
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 2
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 3
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 4
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 5
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 6
+        },
+        {
+          "completely_generated_prob": 0.023188405797101436,
+          "num_sentences": 2,
+          "start_sentence_index": 7
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 9
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 10
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 11
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 12
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 13
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 14
+        },
+        {
+          "completely_generated_prob": 0.023188405797101436,
+          "num_sentences": 2,
+          "start_sentence_index": 15
+        },
+        {
+          "completely_generated_prob": 0.11111111111111108,
+          "num_sentences": 1,
+          "start_sentence_index": 17
+        }
+      ],
+      "sentences": [
+        {
+          "generated_prob": 0,
+          "perplexity": 1612,
+          "sentence": "Perrault & Brother's Grimm Reading Reflection"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 238,
+          "sentence": "Jerry Hu, 8.2, November 26, 2021"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 195,
+          "sentence": "Charles Perrault's \u201cCinderella\u201d"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 1265,
+          "sentence": "Author's Purpose"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 38,
+          "sentence": "I think that Perrault is trying to entertain the readers, because the morals are not strong enough for the reader to perceive the lesson Perrault's trying to teach."
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 60,
+          "sentence": "Perrault wants the readers to know that having graciousness is more important than having beauty."
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 767,
+          "sentence": "Asking questions"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 27,
+          "sentence": "There can be many people in a country that happens to have the same shoe size."
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 108,
+          "sentence": "Having someone trying to find a girl by matching the shoe size is unreal."
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 55,
+          "sentence": "I think that the most important part of the story would be the sisters finding out that Cinderella were the beautiful and most-attracted girl in the ball."
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 577,
+          "sentence": "Brother's Grimm's \u201cCinderella\u201d"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 2004,
+          "sentence": "Monitoring yourself"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 97,
+          "sentence": "I looked it up on dictionary once I got home"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 127,
+          "sentence": "No, the paragraphs weren't too hard"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 1654,
+          "sentence": "Summary & main idea"
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 75,
+          "sentence": "The protagonist Cinderella is a beautiful young lady, whose father happens to meet a step mom with two daughters rich on the outside but dark on the inside."
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 76,
+          "sentence": "And so, with the former rising up from a cinderwench to the princess and the latter depending on their parent's wealth, the two sisters not only cannot see and recognize Cinderella in the ball, but they cannot perceive, that their selfishness to Cinderella only makes them weaker and farther from being the princess."
+        },
+        {
+          "generated_prob": 0,
+          "perplexity": 83,
+          "sentence": "The climax of the story is that cinderella's foot fits perfectly in the shoes, while the two sisters are trying ridiculously hard to fit theirs in (cutting their toe, heel off)."
+        }
+      ]
+    }
+  ]
+}

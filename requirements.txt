@@ -9,4 +9,5 @@ pypdf2
 fpdf
 textwrap3
 gunicorn
-pypandoc
+python-docx
+docx
