@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import textwrap
 from fpdf import FPDF
 from datetime import date, datetime
+import socket
 
 # init
 app = Flask(__name__)
@@ -264,4 +265,8 @@ def file_upload():
 
 
 if __name__ == '__main__':
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(('localhost', 0))
+    port = sock.getsockname()[1]
+    sock.close()
     app.run(debug=False)
