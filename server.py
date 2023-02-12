@@ -243,7 +243,7 @@ def generateReport(path):
 
 @app.route('/')
 def feedTemplate():
-    return render_template('/templetes/index.html')
+    return render_template('/index.html')
 
 
 @app.route('/', methods=['GET', 'POST'])
