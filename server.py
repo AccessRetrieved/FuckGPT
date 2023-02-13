@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, url_for, redirect, send_file
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import pathlib
 import requests
@@ -19,6 +20,8 @@ from fpdf import FPDF
 from datetime import date, datetime
 import socket
 import docx
+import sqlite3
+import uuid
 
 # TODO
 # :Add flask login/account portal, craete account available, wth sqlite database
@@ -26,6 +29,15 @@ import docx
 # init
 app = Flask(__name__)
 allowedExtensions = {'txt', 'pdf', 'docx'}
+table_connection = '''
+CREATE TABLE IF NOT EXISTS Users (
+    id text PRIMARY KEY,
+    username text,
+    password text,
+    passwordHashed text,
+    email text
+);
+'''
 
 class bcolors:
     HEADER = '\033[95m'
@@ -48,6 +60,16 @@ def getText(filename):
 
 def allowed_file(fileExt):
     return '.' in fileExt and fileExt.rsplit('.', 1)[1].lower() in allowedExtensions
+
+def establishSqliteConnection(dbFile):
+    conn = None
+    try:
+        conn = sqlite3.connect(dbFile)
+        return conn
+    except Exception as e:
+        pass
+
+    return conn
 
 def pretty_print_POST(req):
     """
@@ -348,6 +370,26 @@ def file_upload_teacher():
 
     return redirect(url_for('feedTeacherTemplate'))
 
+@app.route('/create', methods=['GET', "POST"])
+def createUser():
+    connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
+    connection.execute(table_connection)
+
+    username = request.args.get('username')
+    password = request.args.get('password')
+    email = request.args.get('email')
+    passwordHashed = generate_password_hash(password)
+
+    command = f'''
+INSERT INTO Users (id, username, password, passwordhashed, email)
+VALUES ('{str(uuid.uuid4())}', '{username}', '{password}', '{passwordHashed}', '{email}')
+        '''
+    
+    connection.execute(command)
+    connection.commit()
+    connection.close()
+
+    return 'User created.'
 
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -11,3 +11,4 @@ textwrap3
 gunicorn
 python-docx
 docx
+uuid
