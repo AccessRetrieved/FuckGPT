@@ -377,11 +377,11 @@ def createUser():
     connection.execute(table_connection)
 
     username = request.args.get('username')
-    password = request.args.get('password')
+    password = request.args.get('pass')
     email = request.args.get('email')
     print(username, password, email)
     
-    if username is not None:
+    if username is not None and password is not None:
         passwordHashed = generate_password_hash(password)
 
         command = f'''
@@ -393,7 +393,7 @@ def createUser():
         connection.commit()
         connection.close()
 
-        return 'User created.'
+        return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login\'}, 1000)"></body>'
     else:
         user_agent = request.headers.get('User-Agent')
         user_agent = user_agent.lower()
@@ -407,7 +407,8 @@ def createUser():
 @app.route('/login', methods=['GET', 'POST'])
 def loginUser():
     username = request.args.get('username')
-    password = request.args.get('password')
+    password = request.args.get('pass')
+    print(username, password)
     
     if username is not None:
         connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
