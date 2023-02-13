@@ -25,7 +25,6 @@ import uuid
 
 # TODO
 # :Add flask login/account portal, craete account available, wth sqlite database
-# pull from heroku cloud: heroku git:clone -a fuckgpt
 
 # init
 app = Flask(__name__)
