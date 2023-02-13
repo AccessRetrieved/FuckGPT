@@ -22,6 +22,7 @@ import socket
 import docx
 import sqlite3
 import uuid
+import yagmail
 
 # TODO
 # :Add account info page
@@ -301,6 +302,10 @@ UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}'
         connection.execute(command)
 
     return returnValues
+
+def sendEmail(to, subject, body):
+    connection = yagmail.SMTP('fukgpt@gmail.com', 'Bestway1234')
+    connection.send(to, subject, body)
 
 # web pages
 @app.route('/')

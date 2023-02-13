@@ -12,4 +12,4 @@ gunicorn
 python-docx
 docx
 uuid
-torch
+yagmail
