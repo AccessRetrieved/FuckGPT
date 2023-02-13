@@ -23,6 +23,7 @@ import docx
 import sqlite3
 import uuid
 import yagmail
+import re
 
 # TODO
 # :Add account info page
@@ -56,6 +57,12 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 # functions
+def emailValidate(s):
+   pat = "^[a-zA-Z0-9-_]+@[a-zA-Z0-9]+\.[a-z]{1,3}$"
+   if re.match(pat,s):
+      return True
+   return False
+
 def getText(filename):
     doc = docx.Document(filename)
     fullText = []
@@ -305,7 +312,7 @@ UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}'
 
 def sendEmail(to, subject, body):
     connection = yagmail.SMTP('fukgpt@gmail.com', 'Bestway1234')
-    connection.send(to, subject, body)
+    connection.send(to=to, subject=subject, content=body)
 
 # web pages
 @app.route('/')
@@ -419,25 +426,30 @@ def createUser():
     email = request.args.get('email')
     
     if username is not None and password is not None:
-        passwordHashed = generate_password_hash(password)
-        dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
+        if emailValidate(email) == True:
+            passwordHashed = generate_password_hash(password)
+            dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
 
-        command = f'''
-    INSERT INTO "users" (id, username, passwordhashed, email, date)
-    VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}', '{dateStr}')
+            command = f'''
+        INSERT INTO "users" (id, username, passwordhashed, email, date)
+        VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}', '{dateStr}')
+                '''
+            
+            connection.execute(command)
+            connection.commit()
+            connection.close()
+
+            connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
+            command = f'''
+    DELETE FROM "users" WHERE "email" IS null OR trim(email)='None';
             '''
-        
-        connection.execute(command)
-        connection.commit()
-        connection.close()
+            connection.execute(command)
 
-        connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
-        command = f'''
-DELETE FROM "users" WHERE "email" IS null OR trim(email)='None';
-        '''
-        connection.execute(command)
+            sendEmail(email, 'Email Verification from FuckGPT', body='Please verify your email')
 
-        return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 1000)"></body>' % (username, password)
+            return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 1000)"></body>' % (username, password)
+        else:
+            return '<html><body onload="alert("Invalid email address."); window.location.href=\'/create\';"></body></html>'
     else:
         user_agent = request.headers.get('User-Agent')
         user_agent = user_agent.lower()
