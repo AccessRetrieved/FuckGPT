@@ -20,6 +20,9 @@ from datetime import date, datetime
 import socket
 import docx
 
+# TODO
+# :Add flask login/account portal, craete account available
+
 # init
 app = Flask(__name__)
 allowedExtensions = {'txt', 'pdf', 'docx'}
