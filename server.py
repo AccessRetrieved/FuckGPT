@@ -391,6 +391,7 @@ VALUES ('{str(uuid.uuid4())}', '{username}', '{password}', '{passwordHashed}', '
 
     return 'User created.'
 
+# problematic
 @app.route('/login', methods=['GET', 'POST'])
 def loginUser():
     username = request.args.get('username')
