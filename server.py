@@ -379,18 +379,29 @@ def createUser():
     username = request.args.get('username')
     password = request.args.get('password')
     email = request.args.get('email')
-    passwordHashed = generate_password_hash(password)
-
-    command = f'''
-INSERT INTO Users (id, username, passwordhashed, email)
-VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}')
-        '''
+    print(username, password, email)
     
-    connection.execute(command)
-    connection.commit()
-    connection.close()
+    if username is not None:
+        passwordHashed = generate_password_hash(password)
 
-    return 'User created.'
+        command = f'''
+    INSERT INTO Users (id, username, passwordhashed, email)
+    VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}')
+            '''
+        
+        connection.execute(command)
+        connection.commit()
+        connection.close()
+
+        return 'User created.'
+    else:
+        user_agent = request.headers.get('User-Agent')
+        user_agent = user_agent.lower()
+
+        if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
+            return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
+        else:
+            return render_template('/createAccount.html')
 
 # problematic -- add html to login page
 @app.route('/login', methods=['GET', 'POST'])
@@ -398,42 +409,31 @@ def loginUser():
     username = request.args.get('username')
     password = request.args.get('password')
     
-    connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
-    cursor = connection.cursor()
-    command = f"SELECT * FROM \"users\""
-    cursor.execute(command)
-    
-    rows = cursor.fetchall()
-    
-    databaseUsername = ''
-    databasePasswordHashed = ''
+    if username is not None:
+        connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
+        cursor = connection.cursor()
+        command = f"SELECT * FROM \"users\""
+        cursor.execute(command)
+        
+        rows = cursor.fetchall()
+        
+        databaseUsername = ''
+        databasePasswordHashed = ''
 
-    for i in rows:
-        if i[1] == username:
-            databaseUsername = i[1]
-            databasePasswordHashed = i[2]
+        for i in rows:
+            if i[1] == username:
+                databaseUsername = i[1]
+                databasePasswordHashed = i[2]
 
-    return f'{check_password_hash(databasePasswordHashed, password)}'
-
-@app.route('/login')
-def login():
-    user_agent = request.headers.get('User-Agent')
-    user_agent = user_agent.lower()
-
-    if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
-        return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
+        return f'{check_password_hash(databasePasswordHashed, password)}'
     else:
-        return render_template('/login.html')
-    
-@app.route('/create')
-def create():
-    user_agent = request.headers.get('User-Agent')
-    user_agent = user_agent.lower()
+        user_agent = request.headers.get('User-Agent')
+        user_agent = user_agent.lower()
 
-    if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
-        return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
-    else:
-        return render_template('/createAccount.html')
+        if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
+            return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
+        else:
+            return render_template('/login.html')
 
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
