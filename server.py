@@ -415,6 +415,26 @@ def loginUser():
 
     return f'{check_password_hash(databasePasswordHashed, password)}'
 
+@app.route('/login')
+def login():
+    user_agent = request.headers.get('User-Agent')
+    user_agent = user_agent.lower()
+
+    if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
+        return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
+    else:
+        return render_template('/login.html')
+    
+@app.route('/create')
+def create():
+    user_agent = request.headers.get('User-Agent')
+    user_agent = user_agent.lower()
+
+    if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
+        return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
+    else:
+        return render_template('/createAccount.html')
+
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('localhost', 0))
