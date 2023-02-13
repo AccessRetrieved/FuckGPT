@@ -29,7 +29,7 @@ import uuid
 
 # init
 app = Flask(__name__)
-app.config.from_pyfile(os.path.join(os.getcwd(), 'config.py'))
+app.config.from_object('config.Config')
 allowedExtensions = {'txt', 'pdf', 'docx'}
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 orig_stdout = None
@@ -363,8 +363,6 @@ def file_upload():
             return '''<html><body onload="alert('Invalid file extension. Only supports .txt, .pdf'); window.location.href='/';"></body></html>'''
     except Exception as e:
         return send_file(os.path.join(os.getcwd(), 'saved', 'report.pdf'))
-        print(e)
-        return '''<html><body onload="alert('Error generating report. Please try again.'); window.location.href='/';"></body></html>'''
 
     return redirect(url_for('feedTemplate'))
 
@@ -402,8 +400,6 @@ def file_upload_teacher():
             return '''<html><body onload="alert('Invalid file extension. Only supports .txt, .pdf'); window.location.href='/';"></body></html>'''
     except Exception as e:
         return send_file(os.path.join(os.getcwd(), 'saved', 'report.pdf'))
-        print(e)
-        return '''<html><body onload="alert('Error generating report. Please try again.'); window.location.href='/';"></body></html>'''
 
     return redirect(url_for('feedTeacherTemplate'))
 
