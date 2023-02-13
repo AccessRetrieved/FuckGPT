@@ -412,7 +412,7 @@ def loginUser():
         if i[1] == username:
             print('found', i[1])
             databaseUsername = i[1]
-            databasePasswordHashed = i[3]
+            databasePasswordHashed = i[2]
 
     return f'{check_password_hash(databasePasswordHashed, password)}'
 
