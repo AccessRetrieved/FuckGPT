@@ -21,7 +21,7 @@ import socket
 import docx
 
 # TODO
-# :Add flask login/account portal, craete account available
+# :Add flask login/account portal, craete account available, wth sqlite database
 
 # init
 app = Flask(__name__)
