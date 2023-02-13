@@ -1,4 +1,3 @@
-rm users.db
 rm -rf saved
 rm returnData.json
 git add .
