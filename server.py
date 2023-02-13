@@ -391,6 +391,20 @@ VALUES ('{str(uuid.uuid4())}', '{username}', '{password}', '{passwordHashed}', '
 
     return 'User created.'
 
+@app.route('/login', methods=['GET', 'POST'])
+def loginUser():
+    username = request.args.get('username')
+    passwordHashed = request.args.get('passwordHashed')
+    
+    connection = establishSqliteConnection(os.path.join(os.getcwd() + 'users.db'))
+    cursor = connection.cursor()
+    command = f"SELECT * FROM Users WHERE username='{username}'"
+    cursor.execute(command)
+    if not cursor:
+        return 'no login'
+    else:
+        return cursor.fetchone()
+
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('localhost', 0))
