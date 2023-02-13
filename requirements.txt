@@ -12,4 +12,4 @@ gunicorn
 python-docx
 docx
 uuid
-git+https://github.com/PrithivirajDamodaran/Parrot_Paraphraser.git
+torch
