@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS "users" (
     id text PRIMARY KEY,
     username text,
     passwordHashed text,
-    email text
+    email text,
+    date text
 );
 '''
 
@@ -89,7 +90,6 @@ def pretty_print_POST(req):
         req.body,
     ))
 
-
 def loadFile(path_to_file):
     # get file type
     pathSuffix = pathlib.Path(path_to_file).suffix
@@ -107,7 +107,6 @@ def loadFile(path_to_file):
         return tempText
     elif pathSuffix == '.docx':
         return getText(path_to_file)
-
 
 def writeToHtml(html):
     path = os.path.abspath('temp.html')
@@ -214,8 +213,6 @@ def generateReport(path, reportTitle='FuckGPT'):
         elif i["perplexity"] >= 1 and i["perplexity"] <= 10:
             ai_plex.append(i)
 
-    # print("")
-
     output(
         f'{bcolors.OKGREEN}Average generated probability: {data["documents"][0]["average_generated_prob"]}{bcolors.ENDC}')
     output(
@@ -294,6 +291,13 @@ def login(username, password):
         'passwordHashed': databasePasswordHashed,
         'validCredencials': check_password_hash(databasePasswordHashed, password)
     }
+    dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
+
+    if check_password_hash(databasePasswordHashed, password) == True:
+        command = f'''
+UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}'
+        '''
+        connection.execute(command)
 
     return returnValues
 
@@ -414,17 +418,24 @@ def createUser():
     
     if username is not None and password is not None:
         passwordHashed = generate_password_hash(password)
+        dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
 
         command = f'''
-    INSERT INTO Users (id, username, passwordhashed, email)
-    VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}')
+    INSERT INTO "users" (id, username, passwordhashed, email, date)
+    VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}', '{dateStr}')
             '''
         
         connection.execute(command)
         connection.commit()
         connection.close()
 
-        return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login\'}, 1000)"></body>'
+        connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
+        command = f'''
+DELETE FROM "users" WHERE "email" IS null OR trim(email)='None';
+        '''
+        connection.execute(command)
+
+        return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 1000)"></body>' % (username, password)
     else:
         user_agent = request.headers.get('User-Agent')
         user_agent = user_agent.lower()
@@ -439,7 +450,6 @@ def createUser():
 def loginUser():
     username = request.args.get('username')
     password = request.args.get('pass')
-    print(username, password)
     
     if username is not None:
         credencials = login(username, password)
