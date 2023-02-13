@@ -25,6 +25,7 @@ import uuid
 
 # TODO
 # :Add flask login/account portal, craete account available, wth sqlite database
+# :Add paraphraser that's not detectable by this program
 
 # init
 app = Flask(__name__)
