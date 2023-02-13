@@ -29,11 +29,11 @@ import uuid
 # init
 app = Flask(__name__)
 allowedExtensions = {'txt', 'pdf', 'docx'}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 table_connection = '''
-CREATE TABLE IF NOT EXISTS Users (
+CREATE TABLE IF NOT EXISTS "users" (
     id text PRIMARY KEY,
     username text,
-    password text,
     passwordHashed text,
     email text
 );
@@ -370,6 +370,7 @@ def file_upload_teacher():
 
     return redirect(url_for('feedTeacherTemplate'))
 
+# problematic -- add html to create account page
 @app.route('/create', methods=['GET', "POST"])
 def createUser():
     connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
@@ -381,8 +382,8 @@ def createUser():
     passwordHashed = generate_password_hash(password)
 
     command = f'''
-INSERT INTO Users (id, username, password, passwordhashed, email)
-VALUES ('{str(uuid.uuid4())}', '{username}', '{password}', '{passwordHashed}', '{email}')
+INSERT INTO Users (id, username, passwordhashed, email)
+VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}')
         '''
     
     connection.execute(command)
@@ -391,20 +392,29 @@ VALUES ('{str(uuid.uuid4())}', '{username}', '{password}', '{passwordHashed}', '
 
     return 'User created.'
 
-# problematic
+# problematic -- add html to login page
 @app.route('/login', methods=['GET', 'POST'])
 def loginUser():
     username = request.args.get('username')
-    passwordHashed = request.args.get('passwordHashed')
+    password = request.args.get('password')
     
-    connection = establishSqliteConnection(os.path.join(os.getcwd() + 'users.db'))
+    connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
     cursor = connection.cursor()
-    command = f"SELECT * FROM Users WHERE username='{username}'"
+    command = f"SELECT * FROM \"users\""
     cursor.execute(command)
-    if not cursor:
-        return 'no login'
-    else:
-        return cursor.fetchone()
+    
+    rows = cursor.fetchall()
+    
+    databaseUsername = ''
+    databasePasswordHashed = ''
+
+    for i in rows:
+        if i[1] == username:
+            print('found', i[1])
+            databaseUsername = i[1]
+            databasePasswordHashed = i[3]
+
+    return f'{check_password_hash(databasePasswordHashed, password)}'
 
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
