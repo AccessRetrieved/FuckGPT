@@ -24,7 +24,6 @@ import docx
 app = Flask(__name__)
 allowedExtensions = {'txt', 'pdf', 'docx'}
 
-
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -93,13 +92,11 @@ def writeToHtml(html):
 
     webbrowser.open(url)
 
-
 def output(str, newline=False):
     if newline:
         print(str, end='\n\n')
     else:
         print(str)
-
 
 def tokenise(path_to_file):
     url = 'https://api.gptzero.me/v2/predict/text'
@@ -114,7 +111,6 @@ def tokenise(path_to_file):
     res = requests.post(url, headers=header, data=json.dumps(data))
 
     return res.text
-
 
 def text_to_pdf(text, filename):
     a4_width_mm = 210
@@ -142,8 +138,7 @@ def text_to_pdf(text, filename):
 
     pdf.output(filename, 'F')
 
-
-def generateReport(path):
+def generateReport(path, reportTitle='FuckGPT'):
     # prep terminal
     if os.path.exists(path):
         pass
@@ -153,7 +148,7 @@ def generateReport(path):
 
     os.system('clear')
     init(strip=not sys.stdout.isatty())
-    cprint(figlet_format('FuckGPT', font='starwars'), 'white', attrs=['bold'])
+    cprint(figlet_format(reportTitle, font='starwars'), 'white', attrs=['bold'])
     print('Generating your results...')
     print(
         f'Report generated on {date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}')
@@ -257,6 +252,16 @@ def feedTemplate():
     else:
         return render_template('/index.html')
 
+@app.route('/teacher')
+def feedTeacherTemplate():
+    user_agent = request.headers.get('User-Agent')
+    user_agent = user_agent.lower()
+
+    if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
+        return render_template('/phone.html')
+    else:
+        return render_template('/index_teacher.html')
+
 @app.route('/c7f8f77fe951231edc4ac876a17f3b9d.txt')
 def wechatBypass():
     return send_file(os.path.join(os.getcwd(), 'c7f8f77fe951231edc4ac876a17f3b9d.txt'), download_name='c7f8f77fe951231edc4ac876a17f3b9d.txt')
@@ -300,6 +305,45 @@ def file_upload():
         return '''<html><body onload="alert('Error generating report. Please try again.'); window.location.href='/';"></body></html>'''
 
     return redirect(url_for('feedTemplate'))
+
+@app.route('/teacher', methods=['GET', 'POST'])
+def file_upload_teacher():
+    uploaded_file = request.files['files']
+
+    try:
+        if uploaded_file and allowed_file(uploaded_file.filename):
+            if uploaded_file.filename != '':
+                filename = secure_filename(uploaded_file.filename)
+                fileExtension = pathlib.Path(filename).suffix
+                if fileExtension == '.txt' or fileExtension == '.pdf' or fileExtension == '.docx':
+                    os.makedirs(os.path.join(
+                        os.getcwd(), 'saved'), exist_ok=True)
+                    uploaded_file.save(os.path.join(
+                        'saved', secure_filename(uploaded_file.filename)))
+                    with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'w') as report:
+                        sys.stdout = report
+                        generateReport(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), reportTitle='AntiGPT')
+
+                    with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'r') as readerFile:
+                        text = readerFile.read()
+                        readerFile.close()
+
+                    text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'),
+                                os.path.join(os.getcwd(), 'saved', 'report.pdf'))
+                    removeDir = ['report.txt', secure_filename(
+                        uploaded_file.filename)]
+                    for i in removeDir:
+                        os.remove(os.path.join(os.getcwd(), 'saved', i))
+
+                    return send_file(os.path.join(os.getcwd(), 'saved', 'report.pdf'))
+        else:
+            return '''<html><body onload="alert('Invalid file extension. Only supports .txt, .pdf'); window.location.href='/';"></body></html>'''
+    except Exception as e:
+        return send_file(os.path.join(os.getcwd(), 'saved', 'report.pdf'))
+        print(e)
+        return '''<html><body onload="alert('Error generating report. Please try again.'); window.location.href='/';"></body></html>'''
+
+    return redirect(url_for('feedTeacherTemplate'))
 
 
 if __name__ == '__main__':
