@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, redirect, send_file
+from flask import Flask, render_template, request, url_for, redirect, send_file, jsonify
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -28,8 +28,10 @@ import uuid
 
 # init
 app = Flask(__name__)
+app.config.from_pyfile(os.path.join(os.getcwd(), 'config.py'))
 allowedExtensions = {'txt', 'pdf', 'docx'}
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+orig_stdout = None
 table_connection = '''
 CREATE TABLE IF NOT EXISTS "users" (
     id text PRIMARY KEY,
@@ -263,10 +265,39 @@ def generateReport(path, reportTitle='FuckGPT'):
                    i["perplexity"], bcolors.ENDC), newline=False)
             print("{}Sentence: {}{}".format(bcolors.WARNING,
                   i["sentence"], bcolors.ENDC), end='\n\n')
+            
+    if sys.stdout != orig_stdout:
+        sys.stdout.close()
+        sys.stdout=orig_stdout
+    else:
+        pass
+
+def login(username, password):
+    connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
+    cursor = connection.cursor()
+    command = f"SELECT * FROM \"users\""
+    cursor.execute(command)
+    
+    rows = cursor.fetchall()
+    
+    databaseUsername = ''
+    databasePasswordHashed = ''
+
+    for i in rows:
+        if i[1] == username:
+            databaseUsername = i[1]
+            databasePasswordHashed = i[2]
+
+    returnValues = {
+        'username': databaseUsername,
+        'password': password,
+        'passwordHashed': databasePasswordHashed,
+        'validCredencials': check_password_hash(databasePasswordHashed, password)
+    }
+
+    return returnValues
 
 # web pages
-
-
 @app.route('/')
 def feedTemplate():
     user_agent = request.headers.get('User-Agent')
@@ -306,6 +337,7 @@ def file_upload():
                     uploaded_file.save(os.path.join(
                         'saved', secure_filename(uploaded_file.filename)))
                     with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'w') as report:
+                        orig_stdout = sys.stdout
                         sys.stdout = report
                         generateReport(os.path.join(
                             os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
@@ -379,7 +411,6 @@ def createUser():
     username = request.args.get('username')
     password = request.args.get('pass')
     email = request.args.get('email')
-    print(username, password, email)
     
     if username is not None and password is not None:
         passwordHashed = generate_password_hash(password)
@@ -411,22 +442,9 @@ def loginUser():
     print(username, password)
     
     if username is not None:
-        connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
-        cursor = connection.cursor()
-        command = f"SELECT * FROM \"users\""
-        cursor.execute(command)
-        
-        rows = cursor.fetchall()
-        
-        databaseUsername = ''
-        databasePasswordHashed = ''
+        credencials = login(username, password)
 
-        for i in rows:
-            if i[1] == username:
-                databaseUsername = i[1]
-                databasePasswordHashed = i[2]
-
-        return f'{check_password_hash(databasePasswordHashed, password)}'
+        return jsonify(credencials)
     else:
         user_agent = request.headers.get('User-Agent')
         user_agent = user_agent.lower()
