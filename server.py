@@ -410,7 +410,6 @@ def loginUser():
 
     for i in rows:
         if i[1] == username:
-            print('found', i[1])
             databaseUsername = i[1]
             databasePasswordHashed = i[2]
 
