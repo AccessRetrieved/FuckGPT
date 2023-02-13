@@ -24,7 +24,7 @@ import sqlite3
 import uuid
 
 # TODO
-# :Add flask login/account portal, craete account available, wth sqlite database
+# :Add account info page
 # :Add paraphraser that's not detectable by this program
 
 # init
