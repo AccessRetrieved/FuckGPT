@@ -22,8 +22,9 @@ import socket
 import docx
 import sqlite3
 import uuid
-import yagmail
 import re
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 # TODO
 # :Add account info page
@@ -41,9 +42,11 @@ CREATE TABLE IF NOT EXISTS "users" (
     username text,
     passwordHashed text,
     email text,
+    emailVerified int,
     date text
 );
 '''
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -57,11 +60,20 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 # functions
-def emailValidate(s):
-   pat = "^[a-zA-Z0-9-_]+@[a-zA-Z0-9]+\.[a-z]{1,3}$"
-   if re.match(pat,s):
-      return True
-   return False
+
+
+def sendEmail(to, subject, htmlBody):
+    message = Mail(from_email='fukgpt@gmail.com', to_emails=to,
+                   subject=subject, html_content=htmlBody)
+
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sg.send(message)
+
+        return [response.status_code, response.body, response.headers]
+    except Exception as e:
+        print(e)
+
 
 def getText(filename):
     doc = docx.Document(filename)
@@ -70,8 +82,10 @@ def getText(filename):
         fullText.append(para.text)
     return '\n'.join(fullText)
 
+
 def allowed_file(fileExt):
     return '.' in fileExt and fileExt.rsplit('.', 1)[1].lower() in allowedExtensions
+
 
 def establishSqliteConnection(dbFile):
     conn = None
@@ -82,6 +96,7 @@ def establishSqliteConnection(dbFile):
         pass
 
     return conn
+
 
 def pretty_print_POST(req):
     """
@@ -98,6 +113,7 @@ def pretty_print_POST(req):
         '\r\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
         req.body,
     ))
+
 
 def loadFile(path_to_file):
     # get file type
@@ -117,6 +133,7 @@ def loadFile(path_to_file):
     elif pathSuffix == '.docx':
         return getText(path_to_file)
 
+
 def writeToHtml(html):
     path = os.path.abspath('temp.html')
     url = 'file://' + path
@@ -127,11 +144,13 @@ def writeToHtml(html):
 
     webbrowser.open(url)
 
+
 def output(str, newline=False):
     if newline:
         print(str, end='\n\n')
     else:
         print(str)
+
 
 def tokenise(path_to_file):
     url = 'https://api.gptzero.me/v2/predict/text'
@@ -146,6 +165,7 @@ def tokenise(path_to_file):
     res = requests.post(url, headers=header, data=json.dumps(data))
 
     return res.text
+
 
 def text_to_pdf(text, filename):
     a4_width_mm = 210
@@ -173,6 +193,7 @@ def text_to_pdf(text, filename):
 
     pdf.output(filename, 'F')
 
+
 def generateReport(path, reportTitle='FuckGPT'):
     # prep terminal
     if os.path.exists(path):
@@ -183,7 +204,8 @@ def generateReport(path, reportTitle='FuckGPT'):
 
     os.system('clear')
     init(strip=not sys.stdout.isatty())
-    cprint(figlet_format(reportTitle, font='starwars'), 'white', attrs=['bold'])
+    cprint(figlet_format(reportTitle, font='starwars'),
+           'white', attrs=['bold'])
     print('Generating your results...')
     print(
         f'Report generated on {date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}')
@@ -271,21 +293,22 @@ def generateReport(path, reportTitle='FuckGPT'):
                    i["perplexity"], bcolors.ENDC), newline=False)
             print("{}Sentence: {}{}".format(bcolors.WARNING,
                   i["sentence"], bcolors.ENDC), end='\n\n')
-            
+
     if sys.stdout != orig_stdout:
         sys.stdout.close()
-        sys.stdout=orig_stdout
+        sys.stdout = orig_stdout
     else:
         pass
+
 
 def login(username, password):
     connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
     cursor = connection.cursor()
     command = f"SELECT * FROM \"users\""
     cursor.execute(command)
-    
+
     rows = cursor.fetchall()
-    
+
     databaseUsername = ''
     databasePasswordHashed = ''
 
@@ -310,11 +333,9 @@ UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}'
 
     return returnValues
 
-def sendEmail(to, subject, body):
-    connection = yagmail.SMTP('fukgpt@gmail.com', 'Bestway1234')
-    connection.send(to=to, subject=subject, contents=body)
-
 # web pages
+
+
 @app.route('/')
 def feedTemplate():
     user_agent = request.headers.get('User-Agent')
@@ -324,6 +345,7 @@ def feedTemplate():
         return render_template('/phone.html')
     else:
         return render_template('/index.html')
+
 
 @app.route('/teacher')
 def feedTeacherTemplate():
@@ -335,9 +357,11 @@ def feedTeacherTemplate():
     else:
         return render_template('/index_teacher.html')
 
+
 @app.route('/c7f8f77fe951231edc4ac876a17f3b9d.txt')
 def wechatBypass():
     return send_file(os.path.join(os.getcwd(), 'c7f8f77fe951231edc4ac876a17f3b9d.txt'), download_name='c7f8f77fe951231edc4ac876a17f3b9d.txt')
+
 
 @app.route('/', methods=['GET', 'POST'])
 def file_upload():
@@ -378,6 +402,7 @@ def file_upload():
 
     return redirect(url_for('feedTemplate'))
 
+
 @app.route('/teacher', methods=['GET', 'POST'])
 def file_upload_teacher():
     uploaded_file = request.files['files']
@@ -394,7 +419,8 @@ def file_upload_teacher():
                         'saved', secure_filename(uploaded_file.filename)))
                     with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'w') as report:
                         sys.stdout = report
-                        generateReport(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), reportTitle='AntiGPT')
+                        generateReport(os.path.join(os.getcwd(), 'saved', secure_filename(
+                            uploaded_file.filename)), reportTitle='AntiGPT')
 
                     with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'r') as readerFile:
                         text = readerFile.read()
@@ -415,41 +441,40 @@ def file_upload_teacher():
 
     return redirect(url_for('feedTeacherTemplate'))
 
-# problematic -- add html to create account page
+
 @app.route('/create', methods=['GET', "POST"])
 def createUser():
-    connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
+    connection = establishSqliteConnection(
+        os.path.join(os.getcwd(), 'users.db'))
     connection.execute(table_connection)
 
     username = request.args.get('username')
     password = request.args.get('pass')
     email = request.args.get('email')
-    
+
     if username is not None and password is not None:
-        if emailValidate(email) == True:
-            passwordHashed = generate_password_hash(password)
-            dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
+        passwordHashed = generate_password_hash(password)
+        dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
 
-            command = f'''
-        INSERT INTO "users" (id, username, passwordhashed, email, date)
-        VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}', '{dateStr}')
-                '''
-            
-            connection.execute(command)
-            connection.commit()
-            connection.close()
-
-            connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
-            command = f'''
-    DELETE FROM "users" WHERE "email" IS null OR trim(email)='None';
+        command = f'''
+    INSERT INTO "users" (id, username, passwordhashed, email, emailVerified, date)
+    VALUES ('{str(uuid.uuid4())}', '{username}', '{passwordHashed}', '{email}', 0, '{dateStr}')
             '''
-            connection.execute(command)
 
-            sendEmail(email, 'Email Verification from FuckGPT', body='Please verify your email')
+        connection.execute(command)
+        connection.commit()
+        connection.close()
 
-            return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 1000)"></body>' % (username, password)
-        else:
-            return '<html><body onload="alert("Invalid email address."); window.location.href=\'/create\';"></body></html>'
+#         connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
+#         command = f'''
+# DELETE FROM "users" WHERE "email" IS null OR trim(email)='None';
+#         '''
+#         connection.execute(command)
+
+        emailData = f'''<a href="https://fuckgpt.herokuapp.com/verify?username={username}&email={email}">Click here to view email.</a>'''
+        sendEmail(email, 'Verification', emailData)
+
+        return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 1000)"></body>' % (username, password)
     else:
         user_agent = request.headers.get('User-Agent')
         user_agent = user_agent.lower()
@@ -464,7 +489,7 @@ def createUser():
 def loginUser():
     username = request.args.get('username')
     password = request.args.get('pass')
-    
+
     if username is not None:
         credencials = login(username, password)
 
@@ -477,6 +502,20 @@ def loginUser():
             return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
         else:
             return render_template('/login.html')
+
+@app.route('/verify', methods=['GET', 'POST'])
+def verifyEmail():
+    username = request.args.get('username')
+    email = request.args.get('email')
+
+    return '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> <html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" lang="en"> <head> <link rel="stylesheet" type="text/css" hs-webfonts="true" href="https://fonts.googleapis.com/css?family=Lato|Lato:i,b,bi"> <meta property="og:title" content="Email template"> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <style type="text/css"> @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Comfortaa:wght@300&display=swap'); a { text-decoration: underline; color: inherit; font-weight: bold; color: #253342; } h1 { font-size: 45px; font-family: 'Comfortaa'; } h2 { font-size: 28px; font-weight: 900; font-family: 'Comfortaa'; } p { font-weight: 100; font-family: 'Calibri'; } td { vertical-align: top; } #email { margin: auto; width: 600px; background-color: white; } button { font: inherit; background-color: #FF7A59; border: none; padding: 10px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; color: white; border-radius: 5px; box-shadow: 3px 3px #d94c53; font-family: 'Comfortaa'; font-size: 15px; } .subtle-link { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #CBD6E2; } </style> </head> <body bgcolor="#F5F8FA" style="width: 100%; margin: auto 0; padding:0; font-family:Lato, sans-serif; font-size:18px; color:#33475B; word-break:break-word"> <div id="email"> <table align="right" role="presentation"> <tr> <td> <a class="subtle-link" href="%s">View in Browser</a> </td> <tr> </table> <table role="presentation" width="100%"> <tr> <td bgcolor="white" align="center" style="color: black;"> <img alt="" src="/static/img/fuckgpt.png" width="500px" align="middle"> <h1>Please verify your email</h1> </td> </table> <table role="presentation" border="0" cellpadding="0" cellspacing="10px" style="padding: 30px 30px 30px 60px;"> <tr> <td> <h2>Verify</h2> <p>Let's verify your email so you can get started fucking ChatGPT.</p> <button onclick="window.location.href='%s'">Verify</button> </td> </tr> </table> <!-- <table role="presentation" border="0" cellpadding="0" cellspacing="10px" width="100%" style="padding: 30px 30px 30px 60px;"> <tr> <td> <img alt="Blog" src="https://www.hubspot.com/hubfs/assets/hubspot.com/style-guide/brand-guidelines/guidelines_sample-illustration-3.svg" width="200px" align="middle"> <h2> Vivamus ac elit eget </h2> <p> Vivamus ac elit eget dolor placerat tristique et vulputate nibh. Sed in elementum nisl, quis mollis enim. Etiam gravida dui vel est euismod, at aliquam ipsum euismod. </p> </td> <td> <img alt="Shopping" src="https://www.hubspot.com/hubfs/assets/hubspot.com/style-guide/brand-guidelines/guidelines_sample-illustration-5.svg" width="200px" align="middle"> <h2> Suspendisse tincidunt iaculis </h2> <p> Suspendisse tincidunt iaculis fringilla. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras laoreet elit purus, quis pulvinar ipsum pulvinar et. </p> </td> </tr> <tr> <td> <button> Button 2 </button> </td> <td> <button> Button 3 </button> </td> </table> --> <table role="presentation" bgcolor="#EAF0F6" width="100%" style="margin-top: 50px;"> <tr> <td align="center" style="padding: 30px 30px;"> <h2>FuckGPT</h2> <p>As the name suggests—Fuck ChatGPT. Uncover the truth behind essays.</p> <a style="padding: 10px" href="https://fuckgpt.herokuapp.com">Learn More</a> </td> </tr> </table> <table role="presentation" bgcolor="#F5F8FA" width="100%"> <tr> <td align="left" style="padding: 30px 30px;"> <a style="color:#99ACC2; font-size: 15px"> Github </a> <p style="color:#99ACC2"> Made with &hearts; on Earth </p> </td> </tr> </table> </div> </body> </html>''' % (f'https://fuckgpt.herokuapp.com/verify?username={username}&email={email}', username, f'https://fuckgpt.herokuapp.com/verify?username={username}&email={email}')
+
+@app.route('/verify')
+def feedEmailTemplate():
+    username = request.args.get('username')
+    email = request.args.get('email')
+
+    return render_template('email.html', link=f'https://fuckgpt.herokuapp.com/verify?username={username}&email={email}', username=username)
 
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
