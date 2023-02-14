@@ -31,7 +31,7 @@ import re
 
 # init
 app = Flask(__name__)
-app.config.from_object('config.Config')
+app.config.from_pyfile(os.path.join(os.getcwd(), 'config.py'))
 allowedExtensions = {'txt', 'pdf', 'docx'}
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 orig_stdout = None
