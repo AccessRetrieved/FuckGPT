@@ -59,8 +59,8 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 # functions
-def sendEmail(to, subject, htmlBody, name):
-    message = Mail(from_email='fukgpt@gmail.com', to_emails=To(email=to, name='Sir or Madam', substitutions={'-username-': name}),
+def sendEmail(to, subject, htmlBody):
+    message = Mail(from_email='fukgpt@gmail.com', to_emails=to,
                    subject=subject, html_content=htmlBody)
 
     try:
