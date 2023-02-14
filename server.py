@@ -448,7 +448,7 @@ def createUser():
     password = request.args.get('pass')
     email = request.args.get('email')
 
-    if username is not None and password is not None and email is not None:
+    if username is not None and password is not None:
         passwordHashed = generate_password_hash(password)
         dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
 
