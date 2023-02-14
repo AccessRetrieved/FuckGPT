@@ -23,7 +23,7 @@ import docx
 import sqlite3
 import uuid
 import re
-from sendgrid import SendGridAPIClient
+from sendgrid import SendGridAPIClient, To
 from sendgrid.helpers.mail import Mail
 
 # TODO
@@ -47,7 +47,6 @@ CREATE TABLE IF NOT EXISTS "users" (
 );
 '''
 
-
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -60,8 +59,8 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 # functions
-def sendEmail(to, subject, htmlBody):
-    message = Mail(from_email='fukgpt@gmail.com', to_emails=to,
+def sendEmail(to, subject, htmlBody, name):
+    message = Mail(from_email='fukgpt@gmail.com', to_emails=To(email=to, name='Sir or Madam', substitutions={'-username-': name}),
                    subject=subject, html_content=htmlBody)
 
     try:
@@ -462,7 +461,7 @@ def createUser():
         connection.commit()
         connection.close()
 
-        emailData = f'''<a href="https://fuckgpt.herokuapp.com/verify?username={username}&email={email}">Click here to view email.</a>'''
+        emailData = f'''<a href="https://fuckgpt.herokuapp.com/verify?username={username}&email={email}">Hey -username-, Click here to verify your email.</a>'''
         # print(emailData)
         sendEmail(email, 'Account Verification', emailData)
 
