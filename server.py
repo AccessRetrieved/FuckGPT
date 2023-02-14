@@ -312,7 +312,7 @@ UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}'
 
 def sendEmail(to, subject, body):
     connection = yagmail.SMTP('fukgpt@gmail.com', 'Bestway1234')
-    connection.send(to=to, subject=subject, content=body)
+    connection.send(to=to, subject=subject, contents=body)
 
 # web pages
 @app.route('/')
