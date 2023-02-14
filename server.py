@@ -60,8 +60,6 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 # functions
-
-
 def sendEmail(to, subject, htmlBody):
     message = Mail(from_email='fukgpt@gmail.com', to_emails=to,
                    subject=subject, html_content=htmlBody)
@@ -73,6 +71,7 @@ def sendEmail(to, subject, htmlBody):
         return [response.status_code, response.body, response.headers]
     except Exception as e:
         print(e)
+        pass
 
 
 def getText(filename):
@@ -323,6 +322,7 @@ def login(username, password):
         'passwordHashed': databasePasswordHashed,
         'validCredencials': check_password_hash(databasePasswordHashed, password)
     }
+    
     dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
 
     if check_password_hash(databasePasswordHashed, password) == True:
@@ -465,13 +465,9 @@ def createUser():
         connection.commit()
         connection.close()
 
-#         connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
-#         command = f'''
-# DELETE FROM "users" WHERE "email" IS null OR trim(email)='None';
-#         '''
-#         connection.execute(command)
-
+        print(email)
         emailData = f'''<a href="https://fuckgpt.herokuapp.com/verify?username={username}&email={email}">Click here to view email.</a>'''
+        # print(emailData)
         sendEmail(email, 'Verification', emailData)
 
         return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 1000)"></body>' % (username, password)
@@ -503,19 +499,42 @@ def loginUser():
         else:
             return render_template('/login.html')
 
-@app.route('/verify', methods=['GET', 'POST'])
+@app.route('/verify')
+def feedVerifyEmail():
+    username = request.args.get('username')
+    email = request.args.get('email')
+    
+    return render_template('email.html', link=f'/verifyEmail?username={username}&email={email}', username=username)
+
+@app.route('/verifyEmail', methods=['GET', 'POST'])
 def verifyEmail():
     username = request.args.get('username')
     email = request.args.get('email')
 
-    return '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> <html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" lang="en"> <head> <link rel="stylesheet" type="text/css" hs-webfonts="true" href="https://fonts.googleapis.com/css?family=Lato|Lato:i,b,bi"> <meta property="og:title" content="Email template"> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <style type="text/css"> @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Comfortaa:wght@300&display=swap'); a { text-decoration: underline; color: inherit; font-weight: bold; color: #253342; } h1 { font-size: 45px; font-family: 'Comfortaa'; } h2 { font-size: 28px; font-weight: 900; font-family: 'Comfortaa'; } p { font-weight: 100; font-family: 'Calibri'; } td { vertical-align: top; } #email { margin: auto; width: 600px; background-color: white; } button { font: inherit; background-color: #FF7A59; border: none; padding: 10px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; color: white; border-radius: 5px; box-shadow: 3px 3px #d94c53; font-family: 'Comfortaa'; font-size: 15px; } .subtle-link { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #CBD6E2; } </style> </head> <body bgcolor="#F5F8FA" style="width: 100%; margin: auto 0; padding:0; font-family:Lato, sans-serif; font-size:18px; color:#33475B; word-break:break-word"> <div id="email"> <table align="right" role="presentation"> <tr> <td> <a class="subtle-link" href="%s">View in Browser</a> </td> <tr> </table> <table role="presentation" width="100%"> <tr> <td bgcolor="white" align="center" style="color: black;"> <img alt="" src="/static/img/fuckgpt.png" width="500px" align="middle"> <h1>Please verify your email</h1> </td> </table> <table role="presentation" border="0" cellpadding="0" cellspacing="10px" style="padding: 30px 30px 30px 60px;"> <tr> <td> <h2>Verify</h2> <p>Let's verify your email so you can get started fucking ChatGPT.</p> <button onclick="window.location.href='%s'">Verify</button> </td> </tr> </table> <!-- <table role="presentation" border="0" cellpadding="0" cellspacing="10px" width="100%" style="padding: 30px 30px 30px 60px;"> <tr> <td> <img alt="Blog" src="https://www.hubspot.com/hubfs/assets/hubspot.com/style-guide/brand-guidelines/guidelines_sample-illustration-3.svg" width="200px" align="middle"> <h2> Vivamus ac elit eget </h2> <p> Vivamus ac elit eget dolor placerat tristique et vulputate nibh. Sed in elementum nisl, quis mollis enim. Etiam gravida dui vel est euismod, at aliquam ipsum euismod. </p> </td> <td> <img alt="Shopping" src="https://www.hubspot.com/hubfs/assets/hubspot.com/style-guide/brand-guidelines/guidelines_sample-illustration-5.svg" width="200px" align="middle"> <h2> Suspendisse tincidunt iaculis </h2> <p> Suspendisse tincidunt iaculis fringilla. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras laoreet elit purus, quis pulvinar ipsum pulvinar et. </p> </td> </tr> <tr> <td> <button> Button 2 </button> </td> <td> <button> Button 3 </button> </td> </table> --> <table role="presentation" bgcolor="#EAF0F6" width="100%" style="margin-top: 50px;"> <tr> <td align="center" style="padding: 30px 30px;"> <h2>FuckGPT</h2> <p>As the name suggests—Fuck ChatGPT. Uncover the truth behind essays.</p> <a style="padding: 10px" href="https://fuckgpt.herokuapp.com">Learn More</a> </td> </tr> </table> <table role="presentation" bgcolor="#F5F8FA" width="100%"> <tr> <td align="left" style="padding: 30px 30px;"> <a style="color:#99ACC2; font-size: 15px"> Github </a> <p style="color:#99ACC2"> Made with &hearts; on Earth </p> </td> </tr> </table> </div> </body> </html>''' % (f'https://fuckgpt.herokuapp.com/verify?username={username}&email={email}', username, f'https://fuckgpt.herokuapp.com/verify?username={username}&email={email}')
+    connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
+    cursor = connection.cursor()
+    command = f"SELECT * FROM \"users\""
+    cursor.execute(command)
 
-@app.route('/verify')
-def feedEmailTemplate():
-    username = request.args.get('username')
-    email = request.args.get('email')
+    rows = cursor.fetchall()
 
-    return render_template('email.html', link=f'https://fuckgpt.herokuapp.com/verify?username={username}&email={email}', username=username)
+    databaseUsername = ''
+    databaseEmail = ''
+
+    for i in rows:
+        if i[1] == username and i[3] == email:
+            databaseUsername = i[1]
+            databaseEmail = i[3]
+            dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
+
+            connection.executescript(command)
+            connection.execute(f'''UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}\'''')
+            connection.execute(f'''UPDATE "users" SET emailVerified = 1 WHERE username='{databaseUsername}\'''')
+            connection.execute(f'''UPDATE "users" SET email = '{databaseEmail}' WHERE username='{databaseUsername}\'''')
+
+            return '<body onload="alert(\'Email verified!\'); window.history.go(-1); return false;"></body>'
+        else:
+            return '<body onload="alert(\'Failed to verify email. Please try again later.\'); window.history.go(-1); return false;"></body>'
 
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
