@@ -470,7 +470,7 @@ def createUser():
         # print(emailData)
         sendEmail(email, 'Verification', emailData)
 
-        return 'User created. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 1000)"></body>' % (username, password)
+        return 'Account created. Please verify your account with the link sent to your inbox to activate your account. This page will redirect in 5 seconds. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 5000)"></body>' % (username, password)
     else:
         user_agent = request.headers.get('User-Agent')
         user_agent = user_agent.lower()
