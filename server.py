@@ -70,6 +70,7 @@ def sendEmail(to, subject, htmlBody):
 
         return [response.status_code, response.body, response.headers]
     except Exception as e:
+        print(json.dumps(message.get(), sort_keys=True, indent=4))
         print(e)
         pass
 
@@ -299,7 +300,6 @@ def generateReport(path, reportTitle='FuckGPT'):
     else:
         pass
 
-
 def login(username, password):
     connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
     cursor = connection.cursor()
@@ -334,8 +334,6 @@ UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}'
     return returnValues
 
 # web pages
-
-
 @app.route('/')
 def feedTemplate():
     user_agent = request.headers.get('User-Agent')
@@ -444,15 +442,14 @@ def file_upload_teacher():
 
 @app.route('/create', methods=['GET', "POST"])
 def createUser():
-    connection = establishSqliteConnection(
-        os.path.join(os.getcwd(), 'users.db'))
+    connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
     connection.execute(table_connection)
 
     username = request.args.get('username')
     password = request.args.get('pass')
     email = request.args.get('email')
 
-    if username is not None and password is not None:
+    if username is not None and password is not None and email is not None:
         passwordHashed = generate_password_hash(password)
         dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
 
@@ -468,7 +465,7 @@ def createUser():
         print(email)
         emailData = f'''<a href="https://fuckgpt.herokuapp.com/verify?username={username}&email={email}">Click here to view email.</a>'''
         # print(emailData)
-        sendEmail(email, 'Verification', emailData)
+        sendEmail(email, 'Account Verification', emailData)
 
         return 'Account created. Please verify your account with the link sent to your inbox to activate your account. This page will redirect in 5 seconds. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 5000)"></body>' % (username, password)
     else:
