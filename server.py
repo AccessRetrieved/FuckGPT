@@ -65,7 +65,7 @@ def sendEmail(to, subject, htmlBody):
                    subject=subject, html_content=htmlBody)
 
     try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg = SendGridAPIClient('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')
         response = sg.send(message)
 
         return [response.status_code, response.body, response.headers]
