@@ -309,17 +309,20 @@ def login(username, password):
 
     databaseUsername = ''
     databasePasswordHashed = ''
+    databaseEmailActivate = 0
 
     for i in rows:
         if i[1] == username:
             databaseUsername = i[1]
             databasePasswordHashed = i[2]
+            databaseEmailActivate = i[4]
 
     returnValues = {
         'username': databaseUsername,
         'password': password,
         'passwordHashed': databasePasswordHashed,
-        'validCredencials': check_password_hash(databasePasswordHashed, password)
+        'validCredencials': check_password_hash(databasePasswordHashed, password),
+        'emailVerified': True if databaseEmailActivate == 1 else False
     }
     
     dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
