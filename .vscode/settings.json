@@ -1,3 +1,6 @@
 {
-    "python.analysis.typeCheckingMode": "off"
+    "python.analysis.typeCheckingMode": "off",
+    "files.exclude": {
+        "**/.git": false
+    }
 }

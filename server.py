@@ -65,7 +65,7 @@ def sendEmail(to, subject, htmlBody):
                    subject=subject, html_content=htmlBody)
 
     try:
-        sg = SendGridAPIClient('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')
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         response = sg.send(message)
 
         return [response.status_code, response.body, response.headers]
@@ -462,7 +462,6 @@ def createUser():
         connection.commit()
         connection.close()
 
-        print(email)
         emailData = f'''<a href="https://fuckgpt.herokuapp.com/verify?username={username}&email={email}">Click here to view email.</a>'''
         # print(emailData)
         sendEmail(email, 'Account Verification', emailData)
