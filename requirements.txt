@@ -13,4 +13,3 @@ python-docx
 docx
 uuid
 yagmail
-dotenv
