@@ -25,12 +25,14 @@ import uuid
 import re
 from sendgrid import SendGridAPIClient, To
 from sendgrid.helpers.mail import Mail
+from python_http_client.exceptions import HTTPError
 
 # TODO
 # :Add account info page
 # :Add paraphraser that's not detectable by this program
 
 # init
+
 app = Flask(__name__)
 app.config.from_pyfile(os.path.join(os.getcwd(), 'config.py'))
 allowedExtensions = {'txt', 'pdf', 'docx'}
@@ -69,9 +71,13 @@ def sendEmail(to, subject, htmlBody):
 
         return [response.status_code, response.body, response.headers]
     except Exception as e:
+        sendgrid_client = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        try:
+            response = sendgrid_client.send(message)
+        except HTTPError as e:
+            print(e.to_dict)
+
         print(json.dumps(message.get(), sort_keys=True, indent=4))
-        print(e)
-        pass
 
 
 def getText(filename):
@@ -447,7 +453,7 @@ def createUser():
     connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
     connection.execute(table_connection)
 
-    username = request.args.get('username')
+    username = request.args.get('usernames')
     password = request.args.get('pass')
     email = request.args.get('email')
 
@@ -464,11 +470,15 @@ def createUser():
         connection.commit()
         connection.close()
 
-        emailData = f'''<a href="https://fuckgpt.herokuapp.com/verify?username={username}&email={email}">Hey -username-, Click here to verify your email.</a>'''
-        # print(emailData)
-        sendEmail(email, 'Account Verification', emailData)
+        # problematic
+        if email == None:
+            return f'Failed to create account. Received email: {email}'
+        else:
+            print('send email verification')
+            emailData = f'''<a href="https://fuckgpt.herokuapp.com/verify?username={username}&email={email}">Hey -username-, Click here to verify your email.</a>'''
+            email = sendEmail(email, 'Account Verification', emailData)
 
-        return 'Account created. Please verify your account with the link sent to your inbox to activate your account. This page will redirect in 5 seconds. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 5000)"></body>' % (username, password)
+            return 'Account created. Please verify your account with the link sent to your inbox to activate your account. This page will redirect in 5 seconds. <body onload="setTimeout(() => {window.location.href=\'/login?username=%s&pass=%s\'}, 5000)"></body>' % (username, password)
     else:
         user_agent = request.headers.get('User-Agent')
         user_agent = user_agent.lower()
@@ -478,7 +488,6 @@ def createUser():
         else:
             return render_template('/createAccount.html')
 
-# problematic -- add html to login page
 @app.route('/login', methods=['GET', 'POST'])
 def loginUser():
     username = request.args.get('username')
