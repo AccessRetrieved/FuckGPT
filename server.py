@@ -370,7 +370,7 @@ def wechatBypass():
 
 @app.route('/ads.txt')
 def adsenseBypass():
-    return send_file(os.path.join(os.getcwd() + 'ads.txt', download_name='ads.txt'))
+    return send_file(os.path.join(os.getcwd() + 'ads.txt'), download_name='ads.txt')
 
 @app.route('/', methods=['GET', 'POST'])
 def file_upload():
