@@ -2,4 +2,4 @@ sendgrid.env
 returnData.json
 saved/
 .DS_Store
-users.db
+*.db
