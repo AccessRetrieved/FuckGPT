@@ -227,7 +227,7 @@ def generateReport(path, reportTitle='FuckGPT'):
         file.write(prettyJSON)
 
     # return response
-    if round(data["documents"][0]["average_generated_prob"]) == 1:
+    if round(data["documents"][0]["completed_generated_prob"]) == 1:
         output(
             f'{bcolors.FAIL}> Your document is likely to be written entirely by ChatGPT. {bcolors.ENDC}')
     elif round(data["documents"][0]["average_generated_prob"]) == 0:
