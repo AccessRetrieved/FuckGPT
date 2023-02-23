@@ -1,7 +1,12 @@
+# env files
 sendgrid.env
+
+# files with sensitive data
 returnData.json
-saved/
-.DS_Store
 *.db
-__pycache__/
-.vscode/
+
+# useless files
+.DS_Store
+
+# folders
+saved/
