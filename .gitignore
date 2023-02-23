@@ -3,3 +3,5 @@ returnData.json
 saved/
 .DS_Store
 *.db
+__pycache__/
+.vscode/
