@@ -14,3 +14,6 @@ docx
 uuid
 yagmail
 sendgrid
+nltk
+numpy
+networkx
