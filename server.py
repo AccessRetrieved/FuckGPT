@@ -617,7 +617,7 @@ def paraphraser():
 
                     with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'r') as readerFile:
                         text = readerFile.read()
-
+                        
                     text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'),
                                 os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
                     removeDir = ['paraphrase.txt', secure_filename(uploaded_file.filename)]
