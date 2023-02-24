@@ -67,16 +67,19 @@ class bcolors:
 # functions
 def read_article(file_name):
     print('[+] Reading file...')
-    file = open(file_name, "r")
-    filedata = file.readlines()
-    article = filedata[0].split(". ")
+    with open(file_name, 'r') as f:
+        filedata = f.read()
+    if not filedata:
+        return []
+    article = filedata.split(". ")
     sentences = []
 
     for sentence in article:
         sentences.append(sentence.replace("[^a-zA-Z]", " ").split(" "))
-    sentences.pop()
-
+    sentences.pop() 
+    
     return sentences
+
 
 def sentence_similarity(sent1, sent2, stopwords=None):
     print('[+] Finding similarities...')
