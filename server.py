@@ -27,6 +27,7 @@ from sendgrid.helpers.mail import Mail
 from python_http_client.exceptions import HTTPError
 from nltk.corpus import stopwords
 from nltk.cluster.util import cosine_distance
+from nltk.tokenize import sent_tokenize
 import numpy as np
 import networkx as nx
 import nltk
@@ -41,7 +42,7 @@ app.config.from_pyfile(os.path.join(os.getcwd(), 'config.py'))
 allowedExtensions = {'txt', 'pdf', 'docx'}
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 orig_stdout = None
-req = [nltk.download(i) for i in ['punkt', 'stopwords']]
+req = [nltk.download(i) for i in ['punkt', 'stopwords']] # install nltk packages
 table_connection = '''
 CREATE TABLE IF NOT EXISTS "users" (
     id text PRIMARY KEY,
@@ -568,47 +569,59 @@ def file_upload_teacher():
 def paraphraser():
     uploaded_file = request.files['files']
 
-    try:
-        if uploaded_file and allowed_file(uploaded_file.filename):
-            if uploaded_file.filename != '':
-                os.makedirs(os.path.join(os.getcwd(), 'saved'), exist_ok=True)
-                uploaded_file.save(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
-                summary = generate_summary(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), 2)
-                
+    if uploaded_file and allowed_file(uploaded_file.filename):
+        if uploaded_file.filename != '':
+            os.makedirs(os.path.join(os.getcwd(), 'saved'), exist_ok=True)
+            uploaded_file.save(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
+
+            stop_words = stopwords.words('english')
+            sentences = read_article(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
+            sentence_similarity_martix = build_similarity_matrix(sentences, stop_words)
+            sentence_similarity_graph = nx.from_numpy_array(sentence_similarity_martix)
+            scores = nx.pagerank(sentence_similarity_graph)
+
+            ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
+            rankedLen = len(ranked_sentence)
+
+            summary = generate_summary(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), rankedLen)
+            
+            with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
+                orig_stdout = sys.stdout
+                sys.stdout = report
+
+                cprint(figlet_format('FuckGPT', font='starwars'), 'white', attrs=['bold'])
+                print('Generating your results...')
+                print(f'Report generated on {date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}')
+
+                print('')
+
                 with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
-                    orig_stdout = sys.stdout
-                    sys.stdout = report
+                    print("> Below is the paraphrased summary of the text:")    
+                    print(summary)
 
-                    cprint(figlet_format('FuckGPT', font='starwars'), 'white', attrs=['bold'])
-                    print('Generating your results...')
-                    print(f'Report generated on {date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}')
+                if sys.stdout != orig_stdout:
+                    sys.stdout.close()
+                    sys.stdout = orig_stdout
+                else:
+                    pass
 
-                    print('')
+                with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'r') as readerFile:
+                    text = readerFile.read()
 
-                    with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
-                        print("> Below is the paraphrased summary of the text:")    
-                        print(summary)
+                text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'),
+                            os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+                removeDir = ['paraphrase.txt', secure_filename(uploaded_file.filename)]
+                for i in removeDir:
+                    os.remove(os.path.join(os.getcwd(), 'saved', i))
 
-                    if sys.stdout != orig_stdout:
-                        sys.stdout.close()
-                        sys.stdout = orig_stdout
-                    else:
-                        pass
+                return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+    
+    # try:
+        
+    # except Exception as e:
+    #     return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
 
-                    with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'r') as readerFile:
-                        text = readerFile.read()
-
-                    text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'),
-                                os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
-                    removeDir = ['paraphrase.txt', secure_filename(uploaded_file.filename)]
-                    for i in removeDir:
-                        os.remove(os.path.join(os.getcwd(), 'saved', i))
-
-                    return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
-    except Exception as e:
-        return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
-
-    return redirect(url_for('feedParaphraser'))
+    # return redirect(url_for('feedParaphraser'))
 
 
 @app.route('/create', methods=['GET', "POST"])
