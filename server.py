@@ -33,15 +33,15 @@ import nltk
 
 # TODO
 # :Add account info page
-# :Add paraphraser that's not detectable by this program
+# :Add paraphraser that's not detectable by this program on a separate page
 
 # init
-
 app = Flask(__name__)
 app.config.from_pyfile(os.path.join(os.getcwd(), 'config.py'))
 allowedExtensions = {'txt', 'pdf', 'docx'}
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 orig_stdout = None
+req = [nltk.download(i) for i in ['punkt', 'stopwords']]
 table_connection = '''
 CREATE TABLE IF NOT EXISTS "users" (
     id text PRIMARY KEY,
@@ -74,20 +74,20 @@ def read_article(file_name):
 
     for sentence in article:
         sentences.append(sentence.replace("[^a-zA-Z]", " ").split(" "))
-    sentences.pop() 
-    
+    sentences.pop()
+
     return sentences
 
 def sentence_similarity(sent1, sent2, stopwords=None):
     print('[+] Finding similarities...')
     if stopwords is None:
         stopwords = []
- 
+
     sent1 = [w.lower() for w in sent1]
     sent2 = [w.lower() for w in sent2]
- 
+
     all_words = list(set(sent1 + sent2))
- 
+
     vector1 = [0] * len(all_words)
     vector2 = [0] * len(all_words)
 
@@ -100,19 +100,21 @@ def sentence_similarity(sent1, sent2, stopwords=None):
         if w in stopwords:
             continue
         vector2[all_words.index(w)] += 1
- 
+
     return 1 - cosine_distance(vector1, vector2)
+
 
 def build_similarity_matrix(sentences, stop_words):
     print('[+] Building sentence structure...')
     print('[+] Building sentence matrix...')
     similarity_matrix = np.zeros((len(sentences), len(sentences)))
- 
+
     for idx1 in range(len(sentences)):
         for idx2 in range(len(sentences)):
             if idx1 == idx2:
-                continue 
-            similarity_matrix[idx1][idx2] = sentence_similarity(sentences[idx1], sentences[idx2], stop_words)
+                continue
+            similarity_matrix[idx1][idx2] = sentence_similarity(
+                sentences[idx1], sentences[idx2], stop_words)
 
     return similarity_matrix
 
@@ -120,12 +122,12 @@ def generate_summary(file_name, top_n=5):
     print('[+] Generating sentence...')
     stop_words = stopwords.words('english')
     summarize_text = []
-    sentences =  read_article(file_name)
+    sentences = read_article(file_name)
     sentence_similarity_martix = build_similarity_matrix(sentences, stop_words)
     sentence_similarity_graph = nx.from_numpy_array(sentence_similarity_martix)
     scores = nx.pagerank(sentence_similarity_graph)
 
-    ranked_sentence = sorted(((scores[i],s) for i,s in enumerate(sentences)), reverse=True)    
+    ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
 
     for i in range(top_n):
         summarize_text.append(" ".join(ranked_sentence[i][1]))
@@ -369,14 +371,13 @@ def generateReport(path, reportTitle='FuckGPT'):
                    i["perplexity"], bcolors.ENDC), newline=False)
             print("{}Sentence: {}{}".format(bcolors.WARNING,
                   i["sentence"], bcolors.ENDC), end='\n\n')
-            
-    
 
     if sys.stdout != orig_stdout:
         sys.stdout.close()
         sys.stdout = orig_stdout
     else:
         pass
+
 
 def login(username, password):
     connection = establishSqliteConnection(os.path.join(BASE_DIR, 'users.db'))
@@ -403,7 +404,7 @@ def login(username, password):
         'validCredencials': check_password_hash(databasePasswordHashed, password),
         'emailVerified': True if databaseEmailActivate == 1 else False
     }
-    
+
     dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
 
     if check_password_hash(databasePasswordHashed, password) == True:
@@ -414,7 +415,7 @@ UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}'
 
     return returnValues
 
-# web pages
+# feed web pages
 @app.route('/')
 def feedTemplate():
     user_agent = request.headers.get('User-Agent')
@@ -425,6 +426,15 @@ def feedTemplate():
     else:
         return render_template('/index.html')
 
+@app.route('/paraphraser')
+def feedParaphraser():
+    user_agent = request.headers.get('User-Agent')
+    user_agent = user_agent.lower()
+
+    if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
+        return 'Paraphraser is currently not supported for mobile. Please access https://fuckgpt.herokuapp.com/paraphraser on a computer.'
+    else:
+        return render_template('/paraphraser.html')
 
 @app.route('/teacher')
 def feedTeacherTemplate():
@@ -436,15 +446,42 @@ def feedTeacherTemplate():
     else:
         return render_template('/index_teacher.html')
 
+@app.route('/login', methods=['GET', 'POST'])
+def loginUser():
+    username = request.args.get('username')
+    password = request.args.get('pass')
 
+    if username is not None:
+        credencials = login(username, password)
+
+        return jsonify(credencials)
+    else:
+        user_agent = request.headers.get('User-Agent')
+        user_agent = user_agent.lower()
+
+        if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
+            return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
+        else:
+            return render_template('/login.html')
+
+@app.route('/verify')
+def feedVerifyEmail():
+    username = request.args.get('username')
+    email = request.args.get('email')
+
+    return render_template('email.html', link=f'/verifyEmail?username={username}&email={email}', username=username)
+
+# bypass
 @app.route('/c7f8f77fe951231edc4ac876a17f3b9d.txt')
 def wechatBypass():
     return send_file(os.path.join(os.getcwd() + '/c7f8f77fe951231edc4ac876a17f3b9d.txt'), download_name='c7f8f77fe951231edc4ac876a17f3b9d.txt')
+
 
 @app.route('/ads.txt')
 def adsenseBypass():
     return send_file(os.path.join(os.getcwd() + '/ads.txt'), download_name='ads.txt')
 
+# forms
 @app.route('/', methods=['GET', 'POST'])
 def file_upload():
     uploaded_file = request.files['files']
@@ -455,22 +492,21 @@ def file_upload():
                 filename = secure_filename(uploaded_file.filename)
                 fileExtension = pathlib.Path(filename).suffix
                 if fileExtension == '.txt' or fileExtension == '.pdf' or fileExtension == '.docx':
-                    os.makedirs(os.path.join(
-                        os.getcwd(), 'saved'), exist_ok=True)
-                    uploaded_file.save(os.path.join(
-                        'saved', secure_filename(uploaded_file.filename)))
+                    os.makedirs(os.path.join(os.getcwd(), 'saved'), exist_ok=True)
+                    uploaded_file.save(os.path.join('saved', secure_filename(uploaded_file.filename)))
                     with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'w') as report:
                         orig_stdout = sys.stdout
                         sys.stdout = report
-                        generateReport(os.path.join(
-                            os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
+                        try:
+                            generateReport(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
+                        except:
+                            pass
 
                     with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'r') as readerFile:
                         text = readerFile.read()
                         readerFile.close()
 
-                    text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'),
-                                os.path.join(os.getcwd(), 'saved', 'report.pdf'))
+                    text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'), os.path.join(os.getcwd(), 'saved', 'report.pdf'))
                     removeDir = ['report.txt', secure_filename(
                         uploaded_file.filename)]
                     for i in removeDir:
@@ -495,14 +531,15 @@ def file_upload_teacher():
                 filename = secure_filename(uploaded_file.filename)
                 fileExtension = pathlib.Path(filename).suffix
                 if fileExtension == '.txt' or fileExtension == '.pdf' or fileExtension == '.docx':
-                    os.makedirs(os.path.join(
-                        os.getcwd(), 'saved'), exist_ok=True)
-                    uploaded_file.save(os.path.join(
-                        'saved', secure_filename(uploaded_file.filename)))
+                    os.makedirs(os.path.join(os.getcwd(), 'saved'), exist_ok=True)
+                    uploaded_file.save(os.path.join('saved', secure_filename(uploaded_file.filename)))
                     with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'w') as report:
+                        orig_stdout = sys.stdout
                         sys.stdout = report
-                        generateReport(os.path.join(os.getcwd(), 'saved', secure_filename(
-                            uploaded_file.filename)), reportTitle='AntiGPT')
+                        try:
+                            generateReport(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
+                        except:
+                            pass
 
                     with open(os.path.join(os.getcwd(), 'saved', 'report.txt'), 'r') as readerFile:
                         text = readerFile.read()
@@ -524,9 +561,57 @@ def file_upload_teacher():
     return redirect(url_for('feedTeacherTemplate'))
 
 
+@app.route('/paraphraser', methods=['GET', 'POST'])
+def paraphraser():
+    uploaded_file = request.files['files']
+
+    try:
+        if uploaded_file and allowed_file(uploaded_file.filename):
+            if uploaded_file.filename != '':
+                os.makedirs(os.path.join(os.getcwd(), 'saved'), exist_ok=True)
+                uploaded_file.save(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
+                summary = generate_summary(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), 2)
+                
+                with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
+                    orig_stdout = sys.stdout
+                    sys.stdout = report
+
+                    cprint(figlet_format('FuckGPT', font='starwars'), 'white', attrs=['bold'])
+                    print('Generating your results...')
+                    print(f'Report generated on {date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}')
+
+                    print('')
+
+                    with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
+                        print("> Below is the paraphrased summary of the text:")    
+                        print(summary)
+
+                    if sys.stdout != orig_stdout:
+                        sys.stdout.close()
+                        sys.stdout = orig_stdout
+                    else:
+                        pass
+
+                    with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'r') as readerFile:
+                        text = readerFile.read()
+
+                    text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'),
+                                os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+                    removeDir = ['paraphrase.txt', secure_filename(uploaded_file.filename)]
+                    for i in removeDir:
+                        os.remove(os.path.join(os.getcwd(), 'saved', i))
+
+                    return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+    except Exception as e:
+        return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+
+    return redirect(url_for('feedParaphraser'))
+
+
 @app.route('/create', methods=['GET', "POST"])
 def createUser():
-    connection = establishSqliteConnection(os.path.join(os.getcwd(), 'users.db'))
+    connection = establishSqliteConnection(
+        os.path.join(os.getcwd(), 'users.db'))
     connection.execute(table_connection)
 
     username = request.args.get('username')
@@ -546,7 +631,6 @@ def createUser():
         connection.commit()
         connection.close()
 
-        # problematic
         if email == None:
             return f'Failed to create account. Received email: {email}'
         else:
@@ -564,30 +648,6 @@ def createUser():
         else:
             return render_template('/createAccount.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def loginUser():
-    username = request.args.get('username')
-    password = request.args.get('pass')
-
-    if username is not None:
-        credencials = login(username, password)
-
-        return jsonify(credencials)
-    else:
-        user_agent = request.headers.get('User-Agent')
-        user_agent = user_agent.lower()
-
-        if 'iphone' in user_agent or 'android' in user_agent or 'ipad' in user_agent:
-            return '<html><body onload="alert("Login currently not supported on mobile devices.");"></body></html>'
-        else:
-            return render_template('/login.html')
-
-@app.route('/verify')
-def feedVerifyEmail():
-    username = request.args.get('username')
-    email = request.args.get('email')
-    
-    return render_template('email.html', link=f'/verifyEmail?username={username}&email={email}', username=username)
 
 @app.route('/verifyEmail', methods=['GET', 'POST'])
 def verifyEmail():
@@ -611,13 +671,17 @@ def verifyEmail():
             dateStr = f'{date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}'
 
             connection.executescript(command)
-            connection.execute(f'''UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}\'''')
-            connection.execute(f'''UPDATE "users" SET emailVerified = 1 WHERE username='{databaseUsername}\'''')
-            connection.execute(f'''UPDATE "users" SET email = '{databaseEmail}' WHERE username='{databaseUsername}\'''')
+            connection.execute(
+                f'''UPDATE "users" SET date = '{dateStr}' WHERE username='{databaseUsername}\'''')
+            connection.execute(
+                f'''UPDATE "users" SET emailVerified = 1 WHERE username='{databaseUsername}\'''')
+            connection.execute(
+                f'''UPDATE "users" SET email = '{databaseEmail}' WHERE username='{databaseUsername}\'''')
 
             return '<body onload="alert(\'Email verified!\'); window.history.go(-1); return false;"></body>'
         else:
             return '<body onload="alert(\'Failed to verify email. Please try again later.\'); window.history.go(-1); return false;"></body>'
+
 
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
