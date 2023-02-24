@@ -376,6 +376,20 @@ def generateReport(path, reportTitle='FuckGPT'):
             print("{}Sentence: {}{}".format(bcolors.WARNING,
                   i["sentence"], bcolors.ENDC), end='\n\n')
 
+    stop_words = stopwords.words('english')
+    sentences = read_article(path)
+    sentence_similarity_martix = build_similarity_matrix(sentences, stop_words)
+    sentence_similarity_graph = nx.from_numpy_array(sentence_similarity_martix)
+    scores = nx.pagerank(sentence_similarity_graph)
+
+    ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
+    rankedLen = len(ranked_sentence)
+
+    summary = generate_summary(path, rankedLen)
+    
+    output('> Here is the paraphrased text:', newline=False)
+    print(summary)
+
     if sys.stdout != orig_stdout:
         sys.stdout.close()
         sys.stdout = orig_stdout
