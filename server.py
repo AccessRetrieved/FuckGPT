@@ -67,7 +67,6 @@ class bcolors:
 
 # functions
 def read_article(file_name):
-    print('[+] Reading file...')
     with open(file_name, 'r') as f:
         filedata = f.read()
     if not filedata:
@@ -83,7 +82,6 @@ def read_article(file_name):
 
 
 def sentence_similarity(sent1, sent2, stopwords=None):
-    print('[+] Finding similarities...')
     if stopwords is None:
         stopwords = []
 
@@ -109,8 +107,6 @@ def sentence_similarity(sent1, sent2, stopwords=None):
 
 
 def build_similarity_matrix(sentences, stop_words):
-    print('[+] Building sentence structure...')
-    print('[+] Building sentence matrix...')
     similarity_matrix = np.zeros((len(sentences), len(sentences)))
 
     for idx1 in range(len(sentences)):
@@ -123,7 +119,6 @@ def build_similarity_matrix(sentences, stop_words):
     return similarity_matrix
 
 def generate_summary(file_name, top_n=5):
-    print('[+] Generating sentence...')
     stop_words = stopwords.words('english')
     summarize_text = []
     sentences = read_article(file_name)
@@ -582,60 +577,58 @@ def file_upload_teacher():
 @app.route('/paraphraser', methods=['GET', 'POST'])
 def paraphraser():
     uploaded_file = request.files['files']
-
-    if uploaded_file and allowed_file(uploaded_file.filename):
-        if uploaded_file.filename != '':
-            os.makedirs(os.path.join(os.getcwd(), 'saved'), exist_ok=True)
-            uploaded_file.save(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
-
-            stop_words = stopwords.words('english')
-            sentences = read_article(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
-            sentence_similarity_martix = build_similarity_matrix(sentences, stop_words)
-            sentence_similarity_graph = nx.from_numpy_array(sentence_similarity_martix)
-            scores = nx.pagerank(sentence_similarity_graph)
-
-            ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
-            rankedLen = len(ranked_sentence)
-
-            summary = generate_summary(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), rankedLen)
-            
-            with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
-                orig_stdout = sys.stdout
-                sys.stdout = report
-
-                cprint(figlet_format('FuckGPT', font='starwars'), 'white', attrs=['bold'])
-                print('Generating your results...')
-                print(f'Report generated on {date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}')
-
-                print('')
-
-                with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
-                    print("> Below is the paraphrased summary of the text:")    
-                    print(summary)
-
-                if sys.stdout != orig_stdout:
-                    sys.stdout.close()
-                    sys.stdout = orig_stdout
-                else:
-                    pass
-
-                with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'r') as readerFile:
-                    text = readerFile.read()
-
-                text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'),
-                            os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
-                removeDir = ['paraphrase.txt', secure_filename(uploaded_file.filename)]
-                for i in removeDir:
-                    os.remove(os.path.join(os.getcwd(), 'saved', i))
-
-                return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
     
-    # try:
-        
-    # except Exception as e:
-    #     return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+    try:
+        if uploaded_file and allowed_file(uploaded_file.filename):
+            if uploaded_file.filename != '':
+                os.makedirs(os.path.join(os.getcwd(), 'saved'), exist_ok=True)
+                uploaded_file.save(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
 
-    # return redirect(url_for('feedParaphraser'))
+                stop_words = stopwords.words('english')
+                sentences = read_article(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)))
+                sentence_similarity_martix = build_similarity_matrix(sentences, stop_words)
+                sentence_similarity_graph = nx.from_numpy_array(sentence_similarity_martix)
+                scores = nx.pagerank(sentence_similarity_graph)
+
+                ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
+                rankedLen = len(ranked_sentence)
+
+                summary = generate_summary(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), rankedLen)
+                
+                with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
+                    orig_stdout = sys.stdout
+                    sys.stdout = report
+
+                    cprint(figlet_format('FuckGPT', font='starwars'), 'white', attrs=['bold'])
+                    print('Generating your results...')
+                    print(f'Report generated on {date.today().strftime("%B %d, %Y")} {datetime.now().strftime("%H:%M:%S")}')
+
+                    print('')
+
+                    with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
+                        print("> Below is the paraphrased summary of the text:")    
+                        print(summary)
+
+                    if sys.stdout != orig_stdout:
+                        sys.stdout.close()
+                        sys.stdout = orig_stdout
+                    else:
+                        pass
+
+                    with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'r') as readerFile:
+                        text = readerFile.read()
+
+                    text_to_pdf(text.encode('latin-1', 'replace').decode('latin-1'),
+                                os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+                    removeDir = ['paraphrase.txt', secure_filename(uploaded_file.filename)]
+                    for i in removeDir:
+                        os.remove(os.path.join(os.getcwd(), 'saved', i))
+
+                    return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+    except Exception as e:
+        return send_file(os.path.join(os.getcwd(), 'saved', 'paraphrase.pdf'))
+
+    return redirect(url_for('feedParaphraser'))
 
 
 @app.route('/create', methods=['GET', "POST"])
