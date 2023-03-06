@@ -593,7 +593,21 @@ def paraphraser():
                 ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
                 rankedLen = len(ranked_sentence)
 
-                summary = generate_summary(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), rankedLen)
+                presummary = generate_summary(os.path.join(os.getcwd(), 'saved', secure_filename(uploaded_file.filename)), rankedLen)
+
+                stop_words = stopwords.words('english')
+                summarize_text = []
+                sentences = presummary
+                sentence_similarity_martix = build_similarity_matrix(sentences, stop_words)
+                sentence_similarity_graph = nx.from_numpy_array(sentence_similarity_martix)
+                scores = nx.pagerank(sentence_similarity_graph)
+
+                ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
+
+                for i in range(rankedLen):
+                    summarize_text.append(" ".join(ranked_sentence[i][1]))
+
+                summary = '. '.join(summarize_text)
                 
                 with open(os.path.join(os.getcwd(), 'saved', 'paraphrase.txt'), 'w') as report:
                     orig_stdout = sys.stdout
