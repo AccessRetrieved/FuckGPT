@@ -35,6 +35,7 @@ import nltk
 # TODO
 # :Add account info page
 # :Add paraphraser that's not detectable by this program on a separate page
+# :UPDATE [paraphraser that's not detectable by this program on a separate page] Paraphraser works... not detectable by this program or others?
 
 # init
 app = Flask(__name__)
@@ -467,7 +468,7 @@ def loginUser():
     if username is not None:
         credencials = login(username, password)
 
-        return jsonify(credencials)
+        return jsonify(credencials) # :UPDATE [account info page] Return account info page with render_template
     else:
         user_agent = request.headers.get('User-Agent')
         user_agent = user_agent.lower()
