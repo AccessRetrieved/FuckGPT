@@ -234,7 +234,8 @@ def tokenise(path_to_file):
     url = 'https://api.gptzero.me/v2/predict/text'
     header = {
         'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Api-Key': 'c919e416fcd04f18acc72372e722b3c6'
     }
     data = {
         'document': loadFile(path_to_file)
